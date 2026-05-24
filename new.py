@@ -1,7 +1,16 @@
+import os
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 import xgboost as xgb
 from sklearn.metrics import r2_score
+
+
+# Folder configuration (relative to project root)
+PREDICTED_ARRESTS_DIR = os.path.join(os.path.dirname(__file__), "predicted arrests")
 
 
 def predict_arrests_for_year(target_year):
@@ -63,9 +72,10 @@ def predict_arrests_for_year(target_year):
 
     # Save the best model's predictions
     merged_df[column_name] = predictions[column_name]
-    merged_df.to_csv(f"predicted_arrests_{target_year}.csv", index=False)
+    os.makedirs(PREDICTED_ARRESTS_DIR, exist_ok=True)
+    merged_df.to_csv(os.path.join(PREDICTED_ARRESTS_DIR, f"predicted_arrests_{target_year}.csv"), index=False)
     print(f"✅ Best model: {best_model_name} with R² Score: {best_r2_score:.4f}")
-    print(f"✅ Prediction for {target_year} saved to 'predicted_arrests_{target_year}.csv'")
+    print(f"✅ Prediction for {target_year} saved to 'predicted arrests/predicted_arrests_{target_year}.csv'")
 
     # Plotting
     plt.figure(figsize=(22, 10))

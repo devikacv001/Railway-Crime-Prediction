@@ -9,6 +9,11 @@ import xgboost as xgb
 import textwrap
 import io
 import base64
+import os
+
+# Folder configuration (relative to project root)
+PREVIOUS_YEAR_DATA_DIR = os.path.join(os.path.dirname(__file__), "previous year data")
+PREDICTED_ARRESTS_DIR = os.path.join(os.path.dirname(__file__), "predicted arrests")
 
 
 # Load and preprocess the data
@@ -20,9 +25,9 @@ selected_columns = [
     "Total (Indian Railways Act + RP(UP) Act) - Persons Arrested"
 ]
 
-df_2021 = pd.read_csv("2021.csv")[selected_columns].copy()
+df_2021 = pd.read_csv(os.path.join(PREVIOUS_YEAR_DATA_DIR, "2021.csv"))[selected_columns].copy()
 df_2021["YEAR"] = 2021
-df_2022 = pd.read_csv("2022.csv")[selected_columns].copy()
+df_2022 = pd.read_csv(os.path.join(PREVIOUS_YEAR_DATA_DIR, "2022.csv"))[selected_columns].copy()
 df_2022["YEAR"] = 2022
 
 combined_df = pd.concat([df_2021, df_2022], ignore_index=True)
@@ -33,7 +38,9 @@ pivot_df = filtered_df.pivot(index="State/UT", columns="YEAR", values="Total (In
 pivot_df.columns = ["Arrested_2021", "Arrested_2022"]
 pivot_df = pivot_df.reset_index()
 
-df_2019 = pd.read_csv("state_level_crimes_2019.csv")[["State/UT", "Crime against Women Passengers"]]
+df_2019 = pd.read_csv(os.path.join(PREVIOUS_YEAR_DATA_DIR, "state_level_crimes_2019.csv"))[
+    ["State/UT", "Crime against Women Passengers"]
+]
 df_2019.rename(columns={"Crime against Women Passengers": "Women_crime_arrested_2019"}, inplace=True)
 
 merged_df = pd.merge(pivot_df, df_2019, on="State/UT", how="left")
@@ -89,8 +96,9 @@ def predict_arrests_for_year(target_year):
 
     # Save final predictions
     merged_df[column_name] = np.round(rf_predictions).astype(int)
-    merged_df.to_csv(f"predicted_arrests_{target_year}.csv", index=False)
-    print(f"✅ Prediction for {target_year} saved to 'predicted_arrests_{target_year}.csv'")
+    os.makedirs(PREDICTED_ARRESTS_DIR, exist_ok=True)
+    merged_df.to_csv(os.path.join(PREDICTED_ARRESTS_DIR, f"predicted_arrests_{target_year}.csv"), index=False)
+    print(f"✅ Prediction for {target_year} saved to 'predicted arrests/predicted_arrests_{target_year}.csv'")
 
     # Plotting
     plt.figure(figsize=(22, 10))
@@ -115,7 +123,7 @@ def plot_yearwise_rape_cases(selected_state, start_year=2023, end_year=2030):
     rape_data = {}
     try:
         for year in range(start_year, end_year):
-            df = pd.read_csv(f"predicted_arrests_{year}.csv")
+            df = pd.read_csv(os.path.join(PREDICTED_ARRESTS_DIR, f"predicted_arrests_{year}.csv"))
             col = f"Predicted_Arrested_{year}"
             row = df[df["State/UT"] == selected_state]
             if not row.empty:
@@ -143,7 +151,7 @@ def plot_trend_2023_to_2030():
     try:
         trend = {}
         for year in range(2023, 2031):
-            df = pd.read_csv(f"predicted_arrests_{year}.csv")
+            df = pd.read_csv(os.path.join(PREDICTED_ARRESTS_DIR, f"predicted_arrests_{year}.csv"))
             col = f"Predicted_Arrested_{year}"
             trend[year] = df[col].sum()
 
@@ -169,7 +177,7 @@ def plot_line_plots_per_state():
     try:
         trend_df = merged_df[["State/UT", "Arrested_2021", "Arrested_2022"]].copy()
         for year in range(2023, 2031):
-            df = pd.read_csv(f"predicted_arrests_{year}.csv")
+            df = pd.read_csv(os.path.join(PREDICTED_ARRESTS_DIR, f"predicted_arrests_{year}.csv"))
             trend_df = pd.merge(trend_df, df[["State/UT", f"Predicted_Arrested_{year}"]].rename(
                 columns={f"Predicted_Arrested_{year}": f"Arrested_{year}"}), on="State/UT", how="left")
 

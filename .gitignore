@@ -1,0 +1,25 @@
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual env
+.venv/
+env/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Secret files
+.env
+.env.local
+
+# Data and outputs (optional)
+predicted_arrests_*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+

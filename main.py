@@ -4,6 +4,7 @@ from prediction import predict_arrests_for_year, plot_yearwise_rape_cases
 from prediction import plot_trend_2023_to_2030
 from panic_alert import send_emergency_alert
 import pandas as pd
+import os
 
 USERS = {
     "admin": "admin123",
@@ -11,7 +12,8 @@ USERS = {
 }
 
 # Load full state list from CSV
-df = pd.read_csv("predicted_arrests_2030.csv")
+_PREDICTED_DIR = os.path.join(os.path.dirname(__file__), "predicted arrests")
+df = pd.read_csv(os.path.join(_PREDICTED_DIR, "predicted_arrests_2030.csv"))
 ALL_STATES = df["State/UT"].dropna().unique().tolist()
 
 
